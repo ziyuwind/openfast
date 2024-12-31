@@ -44,7 +44,8 @@ option(FPE_TRAP_ENABLED "Enable FPE trap in compiler options" off)
 option(ORCA_DLL_LOAD "Enable OrcaFlex Library Load" on)
 option(BUILD_FASTFARM "Enable building FAST.Farm" off)
 option(BUILD_OPENFAST_CPP_API "Enable building OpenFAST - C++ API" off)
-option(BUILD_OPENFAST_CPP_DRIVER "Enable building OpenFAST C++ driver using C++ API" off)
+option(BUILD_OPENFAST_CPP_DRIVER "Enable building OpenFAST C++ driver using C++ CFD API" off)
+option(BUILD_OPENFAST_LIB_DRIVER "Enable building OpenFAST driver using C++ Library API" off)
 option(BUILD_OPENFAST_SIMULINK_API "Enable building OpenFAST for use with Simulink" off)
 option(OPENMP "Enable OpenMP support" off)
 option(USE_LOCAL_STATIC_LAPACK "Enable downloading and building static LAPACK and BLAS libs" off)
@@ -110,13 +111,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/set_rpath.cmake)
 # OpenMP
 #-------------------------------------------------------------------------------
 
-if (OPENMP OR BUILD_FASTFARM OR BUILD_OPENFAST_CPP_API)
-  if (OPENMP)
-    FIND_PACKAGE(OpenMP REQUIRED)
-  else()
-    # Optional for FF or the CPP interface
-    FIND_PACKAGE(OpenMP)
-  endif()
+if (OPENMP)
+  FIND_PACKAGE(OpenMP REQUIRED)
   if (OpenMP_Fortran_FOUND)
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
     link_libraries("${OpenMP_Fortran_LIBRARIES}")
@@ -192,12 +188,14 @@ set(OPENFAST_MODULES
   nwtc-library
   version
   inflowwind
+  extloads
   aerodyn
-  aerodyn14
+  aerodisk
   servodyn
   elastodyn
   beamdyn
   subdyn
+  seastate
   hydrodyn
   orcaflex-interface
   extptfm
@@ -207,11 +205,13 @@ set(OPENFAST_MODULES
   icefloe
   wakedynamics
   awae
+  lindyn
   map
   turbsim
   supercontroller
-  openfoam
+  externalinflow
   openfast-library
+  simple-elastodyn
 )
 
 set(OPENFAST_REGISTRY_INCLUDES "" CACHE INTERNAL "Registry includes paths")
@@ -232,8 +232,8 @@ endforeach(IDIR IN ITEMS ${OPENFAST_MODULES})
 add_subdirectory(glue-codes)
 
 # Install fortran .mod files also to installation directory
-install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/openfast/
+install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}
+  DESTINATION include/openfast/
   FILES_MATCHING PATTERN "*.mod"
 )
 

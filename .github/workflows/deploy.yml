@@ -1,0 +1,125 @@
+# This workflow uploads the `openfast` python package to PyPI before building an OpenFAST docker image for the
+# linux/amd64 and linux/aarch64 architectures on release. The image is tagged both with "latest" and the version
+# extracted from the release candidate branch's name (e.g. "rc-3.5.3") before being pushed to the `nrel/openfast`
+# repository. The build cache is stored in GitHub actions.
+name: deploy
+
+on:
+  workflow_dispatch:
+  
+  release:
+    types:
+      - released
+
+
+jobs:
+  publish-to-pypi-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' 
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Hatch
+        uses: pypa/hatch@install
+
+      - name: Install dependencies
+        run: pip install keyring[file]
+
+      - name: Build package
+        run: hatch build
+        working-directory: openfast_io
+
+      - name: Publish to PyPI test
+        env:
+          HATCH_INDEX_USER: __token__
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: hatch publish -r test
+        working-directory: openfast_io
+
+  publish-to-pypi:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' 
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Hatch
+        uses: pypa/hatch@install
+
+      - name: Install dependencies
+        run: pip install keyring[file]
+
+      - name: Build package
+        run: hatch build
+        working-directory: openfast_io
+
+      - name: Publish to PyPI
+        env:
+          HATCH_INDEX_USER: __token__
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_TOKEN }}
+        run: hatch publish 
+        working-directory: openfast_io
+
+  docker-build-and-push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    timeout-minutes: 500
+    env:
+      DOCKERFILE_PATH: share/docker/Dockerfile
+      DOCKERHUB_REPOSITORY: nrel/openfast
+      GH_REGISTRY: ghcr.io/openfast/openfast
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Commenting out until we get the NREL DockerHub credentials
+      # - name: Log in to DockerHub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GH_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract tag from release candidate branch name
+        id: extract-tag
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          CLEAN_TAG="${TAG#v}"
+          echo "openfast-tag=$CLEAN_TAG" >> $GITHUB_OUTPUT
+          echo "Extracted tag  $CLEAN_TAG"
+
+      - name: Build and push to registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          platforms: linux/amd64,linux/aarch64
+          tags: |
+            ${{ env.GH_REGISTRY }}:${{ steps.extract-tag.outputs.openfast-tag }},${{ env.GH_REGISTRY }}:latest
+# ${{ env.DOCKERHUB_REPOSITORY }}:${{ steps.extract-tag.outputs.openfast-tag }},${{ env.DOCKERHUB_REPOSITORY }}:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

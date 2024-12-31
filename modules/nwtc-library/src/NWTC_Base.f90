@@ -40,7 +40,7 @@ MODULE NWTC_Base
    
    INTEGER(IntKi), PARAMETER     :: MinChanLen = 10                               !< The min allowable length of channel names (i.e., width of output columns), used because some modules (like Bladed DLL outputs) have excessively long names
    INTEGER(IntKi), PARAMETER     :: LinChanLen = 200                              !< The allowable length of row/column names in linearization files
-   INTEGER(IntKi), PARAMETER     :: MaxFileInfoLineLen = 1024                     !< The allowable length of an input line stored in FileInfoType%Lines
+   INTEGER(IntKi), PARAMETER     :: MaxFileInfoLineLen = 8192                     !< The allowable length of an input line stored in FileInfoType%Lines
 
    INTEGER(IntKi), PARAMETER     :: NWTC_Verbose = 10                             !< The maximum level of verbosity
    INTEGER(IntKi), PARAMETER     :: NWTC_VerboseLevel = 5                         !< a number in [0, NWTC_Verbose]: 0 = no output; NWTC_Verbose=verbose; 
@@ -81,5 +81,30 @@ MODULE NWTC_Base
 
    END TYPE DLL_Type
 
+contains
+
+   !=======================================================================
+   !> This routine sets the error status and error message for a routine      
+   !!  that may set non-AbortErrLev errors. It concatenates error messages
+   !!  and has the ability to provide a sort of traceback message of called
+   !!  routines (if this is called consistently).
+   !!  Modules in the FAST framework are recommended to use it.
+   subroutine SetErrStat (ErrStatLcl, ErrMessLcl, ErrStat, ErrMess, RoutineName)
+      
+      INTEGER(IntKi), INTENT(IN   )  :: ErrStatLcl   ! Error status of the operation
+      CHARACTER(*),   INTENT(IN   )  :: ErrMessLcl   ! Error message if ErrStat /= ErrID_None
+                                                                        
+      INTEGER(IntKi), INTENT(INOUT)  :: ErrStat      ! Error status of the operation
+      CHARACTER(*),   INTENT(INOUT)  :: ErrMess      ! Error message if ErrStat /= ErrID_None
+   
+      CHARACTER(*),   INTENT(IN   )  :: RoutineName  ! Name of the routine error occurred in
+      
+      IF ( ErrStatLcl /= ErrID_None ) THEN
+         IF (ErrStat /= ErrID_None) ErrMess = TRIM(ErrMess)//new_line('a')
+         ErrMess = TRIM(ErrMess)//TRIM(RoutineName)//':'//TRIM(ErrMessLcl)
+         ErrStat = MAX(ErrStat,ErrStatLcl)
+      END IF
+         
+   end subroutine    
 
 END MODULE NWTC_Base
