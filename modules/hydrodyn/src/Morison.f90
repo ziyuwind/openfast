@@ -4759,7 +4759,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       ! Note: if d2=0, the current section is perfectly parallel to the free surface
       IF ( (d2 >= c*c) .and. (.not. EqualRealNos(d2,0.0_DbKi)) ) THEN ! Has intersection
          d = SQRT(d2)
-         IF (b>=0.0) THEN
+         IF (b>=0.0_DbKi) THEN
             alpha =  ACOS(a/d)
          ELSE
             alpha = -ACOS(a/d)
@@ -4767,19 +4767,19 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
          beta   = ACOS(c/d)
          theta1 = alpha - beta
          theta2 = alpha + beta
-         IF ( dot_product( (cos(theta2)-cos(theta1))*z_hat-(sin(theta2)-sin(theta1))*y_hat, n_hat) < 0.0 ) THEN
+         IF ( dot_product( (cos(theta2)-cos(theta1))*z_hat-(sin(theta2)-sin(theta1))*y_hat, n_hat) < 0.0_DbKi ) THEN
             tmp    = theta1
             theta1 = theta2
-            theta2 = tmp + 2.0*PI_D
+            theta2 = tmp + 2.0_DbKi*PI_D
          END IF
          secStat = 1;
-      ELSE IF (c > 0.0) THEN ! Section is fully submerged
-         theta1 = -1.5*PI_D
-         theta2 =  0.5*PI_D
+      ELSE IF (c > 0.0_DbKi) THEN ! Section is fully submerged
+         theta1 = -1.5_DbKi*PI_D
+         theta2 =  0.5_DbKi*PI_D
          secStat = 2;
       ELSE ! Section is completely dry
-         theta1 = -0.5*PI_D
-         theta2 = -0.5*PI_D
+         theta1 = -0.5_DbKi*PI_D
+         theta2 = -0.5_DbKi*PI_D
          secStat = 0;
       END IF
 
@@ -4809,8 +4809,8 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       cosPhi    = SQRT(k_hat(1)**2+k_hat(2)**2)
 
       C0 = Z0*dTheta                +     R*cosPhi*(cosTheta1   -cosTheta2)
-      C1 = Z0*(sinTheta2-sinTheta1) + 0.5*R*cosPhi*(cosTheta2**2-cosTheta1**2)
-      C2 = Z0*(cosTheta1-cosTheta2) + 0.5*R*cosPhi*(dTheta-sinTheta2*cosTheta2+sinTheta1*cosTheta1)
+      C1 = Z0*(sinTheta2-sinTheta1) + 0.5_DbKi*R*cosPhi*(cosTheta2**2-cosTheta1**2)
+      C2 = Z0*(cosTheta1-cosTheta2) + 0.5_DbKi*R*cosPhi*(dTheta-sinTheta2*cosTheta2+sinTheta1*cosTheta1)
 
       dFdl(1:3) = -R   *dRdl*C0*k_hat + R*C1*y_hat + R*C2*z_hat
       dFdl(4:6) = -R**2*dRdl*C2*y_hat + R**2*dRdl*C1*z_hat      + CROSS_PRODUCT((pos0-origin),dFdl(1:3))
@@ -4844,21 +4844,21 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       z0 = origin(3)
 
       ! Global coordinates of the four vertices of the section
-      rv(:,1) = pos0 + x_hat * (-0.5*Sa) + y_hat * (-0.5*Sb)
-      rv(:,2) = pos0 + x_hat * ( 0.5*Sa) + y_hat * (-0.5*Sb)
-      rv(:,3) = pos0 + x_hat * ( 0.5*Sa) + y_hat * ( 0.5*Sb)
-      rv(:,4) = pos0 + x_hat * (-0.5*Sa) + y_hat * ( 0.5*Sb)
+      rv(:,1) = pos0 + x_hat * (-0.5_DbKi*Sa) + y_hat * (-0.5_DbKi*Sb)
+      rv(:,2) = pos0 + x_hat * ( 0.5_DbKi*Sa) + y_hat * (-0.5_DbKi*Sb)
+      rv(:,3) = pos0 + x_hat * ( 0.5_DbKi*Sa) + y_hat * ( 0.5_DbKi*Sb)
+      rv(:,4) = pos0 + x_hat * (-0.5_DbKi*Sa) + y_hat * ( 0.5_DbKi*Sb)
 
       ! Unit normal vector of side walls
-      n(:,1)  =  y_hat + k_hat * 0.5 * dSbdl
-      n(:,2)  = -x_hat + k_hat * 0.5 * dSadl
-      n(:,3)  = -y_hat + k_hat * 0.5 * dSbdl
-      n(:,4)  =  x_hat + k_hat * 0.5 * dSadl
+      n(:,1)  =  y_hat + k_hat * 0.5_DbKi * dSbdl
+      n(:,2)  = -x_hat + k_hat * 0.5_DbKi * dSadl
+      n(:,3)  = -y_hat + k_hat * 0.5_DbKi * dSbdl
+      n(:,4)  =  x_hat + k_hat * 0.5_DbKi * dSadl
 
       ! Check for and count vertices in water
       numVInWtr = 0
       do i = 1,4
-         vInWtr(i) = ( Dot_Product(rv(:,i)-rFS,nFS) <= 0.0 )
+         vInWtr(i) = ( Dot_Product(rv(:,i)-rFS,nFS) <= 0.0_DbKi )
          if ( vInWtr(i) ) then
             numVInWtr = numVInWtr + 1
          end if
@@ -4874,7 +4874,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       end if
 
       ! Compute the hydrostatic force and moment on each of the 4 sides
-      dFdl = 0.0
+      dFdl = 0.0_DbKi
       do i = 1,4
          v1 = i
          if (i == 4) then
@@ -4896,13 +4896,13 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
          if (EqualRealNos(s,0.0_DbKi)) cycle
          if ( vInWtr(v1) .and. vInWtr(v2) ) then
             ! Side fully submerged
-            s1 = 0.0
+            s1 = 0.0_DbKi
             s2 = s;
          else if ( vInWtr(v1) .or. vInWtr(v2) ) then
             ! Side partially wetted
             sInt = s * DOT_PRODUCT(rFS-rv(:,v1),nFS) / DOT_PRODUCT(rv(:,v2)-rv(:,v1),nFS)
             if ( vInWtr(v1) ) then
-               s1 = 0.0
+               s1 = 0.0_DbKi
                s2 = sInt
             else
                s1 = sInt
@@ -4910,15 +4910,15 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
             end if
          else
             ! Side fully out of water
-            s1 = 0.0;
-            s2 = 0.0;
+            s1 = 0.0_DbKi;
+            s2 = 0.0_DbKi;
          end if
 
          dFdl(1:3) = dFdl(1:3) + &
-            -n(:,i) * ( z1*(s2-s1) + 0.5*(z2-z1)/s*(s2*s2-s1*s1) )
-         C(1) = (z2-z1)*(x2-x1)/3.0/(s*s)*(s2**3-s1**3) + 0.5*((z2-z1)*(x1-x0)/s+(x2-x1)*z1/s)*(s2*s2-s1*s1) + z1*(x1-x0)*(s2-s1)
-         C(2) = (z2-z1)*(y2-y1)/3.0/(s*s)*(s2**3-s1**3) + 0.5*((z2-z1)*(y1-y0)/s+(y2-y1)*z1/s)*(s2*s2-s1*s1) + z1*(y1-y0)*(s2-s1)
-         C(3) = (z2-z1)*(z2-z1)/3.0/(s*s)*(s2**3-s1**3) + 0.5*((z2-z1)*(z1-z0)/s+(z2-z1)*z1/s)*(s2*s2-s1*s1) + z1*(z1-z0)*(s2-s1)
+            -n(:,i) * ( z1*(s2-s1) + 0.5_DbKi*(z2-z1)/s*(s2*s2-s1*s1) )
+         C(1) = (z2-z1)*(x2-x1)/3.0_DbKi/(s*s)*(s2**3-s1**3) + 0.5_DbKi*((z2-z1)*(x1-x0)/s+(x2-x1)*z1/s)*(s2*s2-s1*s1) + z1*(x1-x0)*(s2-s1)
+         C(2) = (z2-z1)*(y2-y1)/3.0_DbKi/(s*s)*(s2**3-s1**3) + 0.5_DbKi*((z2-z1)*(y1-y0)/s+(y2-y1)*z1/s)*(s2*s2-s1*s1) + z1*(y1-y0)*(s2-s1)
+         C(3) = (z2-z1)*(z2-z1)/3.0_DbKi/(s*s)*(s2**3-s1**3) + 0.5_DbKi*((z2-z1)*(z1-z0)/s+(z2-z1)*z1/s)*(s2*s2-s1*s1) + z1*(z1-z0)*(s2-s1)
          dFdl(4:6) = dFdl(4:6) - CROSS_PRODUCT(C,n(:,i))
 
       end do
@@ -4951,7 +4951,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       INTEGER(IntKi)                   :: errStat2
       CHARACTER(ErrMsgLen)             :: errMsg2
       ErrStat   = ErrID_None
-      ErrMsg    = ""  
+      ErrMsg    = ""
   
       pos1   = REAL(pos1In,DbKi)
       pos2   = REAL(pos2In,DbKi)
@@ -4959,8 +4959,8 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       r2     = REAL(r2In,DbKi)
       dl     = REAL(dlIn,DbKi)
       dRdl   = (r2-r1)/dl
-      rMid   = 0.5*(  r1+  r2)
-      posMid = 0.5*(pos1In+pos2In)
+      rMid   = 0.5_DbKi*(  r1+  r2)
+      posMid = 0.5_DbKi*(pos1In+pos2In)
       FSPt   = REAL(FSPtIn,DbKi)
       k_hat  = REAL(k_hatIn,DbKi)
       y_hat  = REAL(y_hatIn,DbKi)
@@ -4997,11 +4997,11 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
         CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
 
       ! Distribute the hydrostatic load to the two end nodes
-      F_B1(1:3) = 0.5 * F_B(1:3)
-      F_B2(1:3) = 0.5 * F_B(1:3)
+      F_B1(1:3) = 0.5_DbKi * F_B(1:3)
+      F_B2(1:3) = 0.5_DbKi * F_B(1:3)
       F_B(4:6)  = F_B(4:6) - CROSS_PRODUCT(k_hat*dl,F_B2(1:3))
-      F_B1(4:6) = 0.5 * F_B(4:6)
-      F_B2(4:6) = 0.5 * F_B(4:6)
+      F_B1(4:6) = 0.5_DbKi * F_B(4:6)
+      F_B2(4:6) = 0.5_DbKi * F_B(4:6)
 
    END SUBROUTINE getElementHstLds_Mod2_Cyl
 
@@ -5040,9 +5040,9 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       dl     = REAL(dlIn,DbKi)
       dSadl  = (Sa2-Sa1)/dl
       dSbdl  = (Sb2-Sb1)/dl
-      SaMid  = 0.5*(  Sa1+  Sa2)
-      SbMid  = 0.5*(  Sb1+  Sb2)
-      posMid = 0.5*(pos1In+pos2In)
+      SaMid  = 0.5_DbKi*(  Sa1+  Sa2)
+      SbMid  = 0.5_DbKi*(  Sb1+  Sb2)
+      posMid = 0.5_DbKi*(pos1In+pos2In)
       FSPt   = REAL(FSPtIn,DbKi)
       k_hat  = REAL(k_hatIn,DbKi)
       x_hat  = REAL(x_hatIn,DbKi)
@@ -5077,11 +5077,11 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
         CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
 
       ! Distribute the hydrostatic load to the two end nodes
-      F_B1(1:3) = 0.5 * F_B(1:3)
-      F_B2(1:3) = 0.5 * F_B(1:3)
+      F_B1(1:3) = 0.5_DbKi * F_B(1:3)
+      F_B2(1:3) = 0.5_DbKi * F_B(1:3)
       F_B(4:6)  = F_B(4:6) - CROSS_PRODUCT(k_hat*dl,F_B2(1:3))
-      F_B1(4:6) = 0.5 * F_B(4:6)
-      F_B2(4:6) = 0.5 * F_B(4:6)
+      F_B1(4:6) = 0.5_DbKi * F_B(4:6)
+      F_B2(4:6) = 0.5_DbKi * F_B(4:6)
 
    END SUBROUTINE getElementHstLds_Mod2_Rec
 
@@ -5128,10 +5128,10 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       ErrStat = ErrID_None
       ErrMsg  = ""
 
-      posMidL = 0.5*(pos1+posMid)
-      posMidR = 0.5*(posMid+pos2)
-      rMidL   = 0.5*(r1+rMid)
-      rMidR   = 0.5*(rMid+r2)
+      posMidL = 0.5_DbKi*(pos1+posMid)
+      posMidR = 0.5_DbKi*(posMid+pos2)
+      rMidL   = 0.5_DbKi*(r1+rMid)
+      rMidR   = 0.5_DbKi*(rMid+r2)
 
       ! Avoid sections coincident with the SWL
       IF ( ABS(k_hat(3)) > 0.999999_ReKi ) THEN ! Vertical member
@@ -5144,7 +5144,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       END IF
 
       ! Total hydrostatic load on the element (Simpsons Rule)
-      F_B_3pt = (dFdl1 + 4.0*dFdlMid + dFdl2) * dl/6.0
+      F_B_3pt = (dFdl1 + 4.0_DbKi*dFdlMid + dFdl2) * dl/6.0_DbKi
 
       ! Mid point of left section
       CALL GetSectionFreeSurfaceIntersects_Cyl( posMidL, FSPt, REAL(k_hat,ReKi), REAL(y_hat,ReKi), REAL(z_hat,ReKi), REAL(n_hat,ReKi), rMidL, theta1, theta2, secStatMidL)
@@ -5154,7 +5154,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       CALL GetSectionFreeSurfaceIntersects_Cyl( posMidR, FSPt, REAL(k_hat,ReKi), REAL(y_hat,ReKi), REAL(z_hat,ReKi), REAL(n_hat,ReKi), rMidR, theta1, theta2, secStatMidR)
       CALL GetSectionHstLds_Cyl( origin, posMidR, k_hat, y_hat, z_hat, rMidR, dRdl, theta1, theta2, dFdlMidR)
       
-      F_B_5pt = (dFdl1 + 4.0*dFdlMidL + 2.0*dFdlMid + 4.0*dFdlMidR + dFdl2) * dl/12.0
+      F_B_5pt = (dFdl1 + 4.0_DbKi*dFdlMidL + 2.0_DbKi*dFdlMid + 4.0_DbKi*dFdlMidR + dFdl2) * dl/12.0_DbKi
 
       error = ABS(F_B_3pt - F_B_5pt)
       tolMet = .TRUE.
@@ -5177,8 +5177,8 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       END IF
       
       IF (refine) THEN ! Recursively refine the load integration if tolerance not met
-         CALL RefineElementHstLds_Cyl(origin,pos1,posMidL,posMid,FSPt,r1,rMidL,rMid,0.5*dl,dRdl,secStat1,secStatMidL,secStatMid,k_hat,y_hat,z_hat,n_hat,dFdl1,dFdlMidL,dFdlMid, recurLvl+1, tmp, ErrStat, ErrMsg)
-         CALL RefineElementHstLds_Cyl(origin,posMid,posMidR,pos2,FSPt,rMid,rMidR,r2,0.5*dl,dRdl,secStatMid,secStatMidR,secStat2,k_hat,y_hat,z_hat,n_hat,dFdlMid,dFdlMidR,dFdl2, recurLvl+1, F_B_5pt, ErrStat, ErrMsg)
+         CALL RefineElementHstLds_Cyl(origin,pos1,posMidL,posMid,FSPt,r1,rMidL,rMid,0.5_DbKi*dl,dRdl,secStat1,secStatMidL,secStatMid,k_hat,y_hat,z_hat,n_hat,dFdl1,dFdlMidL,dFdlMid, recurLvl+1, tmp, ErrStat, ErrMsg)
+         CALL RefineElementHstLds_Cyl(origin,posMid,posMidR,pos2,FSPt,rMid,rMidR,r2,0.5_DbKi*dl,dRdl,secStatMid,secStatMidR,secStat2,k_hat,y_hat,z_hat,n_hat,dFdlMid,dFdlMidR,dFdl2, recurLvl+1, F_B_5pt, ErrStat, ErrMsg)
          F_B_5pt = F_B_5pt + tmp
       END IF
 
@@ -5227,12 +5227,12 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       ErrStat = ErrID_None
       ErrMsg  = ""
 
-      posMidL = 0.5*(pos1+posMid)
-      posMidR = 0.5*(posMid+pos2)
-      SaMidL  = 0.5*(Sa1+SaMid)
-      SbMidL  = 0.5*(Sb1+SbMid)
-      SaMidR  = 0.5*(SaMid+Sa2)
-      SbMidR  = 0.5*(SbMid+Sb2)
+      posMidL = 0.5_DbKi*(pos1+posMid)
+      posMidR = 0.5_DbKi*(posMid+pos2)
+      SaMidL  = 0.5_DbKi*(Sa1+SaMid)
+      SbMidL  = 0.5_DbKi*(Sb1+SbMid)
+      SaMidR  = 0.5_DbKi*(SaMid+Sa2)
+      SbMidR  = 0.5_DbKi*(SbMid+Sb2)
 
       ! Avoid sections coincident with the SWL
       IF ( ABS(k_hat(3)) > 0.999999_ReKi ) THEN ! Vertical member
@@ -5245,7 +5245,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       END IF
 
       ! Total hydrostatic load on the element (Simpsons Rule)
-      F_B_3pt = (dFdl1 + 4.0*dFdlMid + dFdl2) * dl/6.0
+      F_B_3pt = (dFdl1 + 4.0_DbKi*dFdlMid + dFdl2) * dl/6.0_DbKi
 
       ! Mid point of left section
       CALL GetSectionHstLds_Rec( origin, posMidL, k_hat, x_hat, y_hat, SaMidL, SbMidL, dSadl, dSbdl, FSPt, n_hat, dFdlMidL, secStatMidL)
@@ -5253,7 +5253,7 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       ! Mid point of right section
       CALL GetSectionHstLds_Rec( origin, posMidR, k_hat, x_hat, y_hat, SaMidR, SbMidR, dSadl, dSbdl, FSPt, n_hat, dFdlMidR, secStatMidR)
       
-      F_B_5pt = (dFdl1 + 4.0*dFdlMidL + 2.0*dFdlMid + 4.0*dFdlMidR + dFdl2) * dl/12.0
+      F_B_5pt = (dFdl1 + 4.0_DbKi*dFdlMidL + 2.0_DbKi*dFdlMid + 4.0_DbKi*dFdlMidR + dFdl2) * dl/12.0_DbKi
 
       error = ABS(F_B_3pt - F_B_5pt)
       tolMet = .TRUE.
@@ -5276,9 +5276,9 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       END IF
       
       IF (refine) THEN ! Recursively refine the load integration if tolerance not met
-         CALL RefineElementHstLds_Rec(origin,pos1,posMidL,posMid,FSPt,Sa1,SaMidL,SaMid,Sb1,SbMidL,SbMid,0.5*dl,dSadl,dSbdl, &
+         CALL RefineElementHstLds_Rec(origin,pos1,posMidL,posMid,FSPt,Sa1,SaMidL,SaMid,Sb1,SbMidL,SbMid,0.5_DbKi*dl,dSadl,dSbdl, &
                 secStat1,secStatMidL,secStatMid,k_hat,x_hat,y_hat,n_hat,dFdl1,dFdlMidL,dFdlMid,recurLvl+1,tmp,ErrStat,ErrMsg)
-         CALL RefineElementHstLds_Rec(origin,posMid,posMidR,pos2,FSPt,SaMid,SaMidR,Sa2,SbMid,SbMidR,Sb2,0.5*dl,dSadl,dSbdl, &
+         CALL RefineElementHstLds_Rec(origin,posMid,posMidR,pos2,FSPt,SaMid,SaMidR,Sa2,SbMid,SbMidR,Sb2,0.5_DbKi*dl,dSadl,dSbdl, &
                 secStatMid,secStatMidR,secStat2,k_hat,x_hat,y_hat,n_hat,dFdlMid,dFdlMidR,dFdl2,recurLvl+1,F_B_5pt,ErrStat,ErrMsg)
          F_B_5pt = F_B_5pt + tmp
       END IF
@@ -5329,13 +5329,13 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       tmp2   = z1_2+z1*z2+z2_2
 
       ! End plate force in the k_hat direction
-      Fk     = -0.5*Z0*(R_2*dTheta-tmp1) + cosPhi/6.0*( 2.0*dy_3 - z1*z2*dy - z1_2*(y2+2.0*y1) + z2_2*(y1+2.0*y2) )
+      Fk     = -0.5_DbKi*Z0*(R_2*dTheta-tmp1) + cosPhi/6.0_DbKi*( 2.0_DbKi*dy_3 - z1*z2*dy - z1_2*(y2+2.0_DbKi*y1) + z2_2*(y1+2.0_DbKi*y2) )
       F(1:3) = p%WaveField%WtrDens * g * Fk * k_hat
 
       ! End plate moment in the y_hat and z_hat direction
-      My     = Z0/6.0*( 2.0*dy_3 + 2.0*dy*tmp2 + 3.0*tmp1*sz ) &    ! y_hat component
-               + cosPhi/24.0*( -3.0*R_4*dTheta + 3.0*y1*z1*(2.0*z1_2-R_2) - 3.0*y2*z2*(2.0*z2_2-R_2) &
-                                                            + 6.0*dy*sz*(z1_2+z2_2) + 8.0*tmp1*tmp2  )
+      My     = Z0/6.0_DbKi*( 2.0_DbKi*dy_3 + 2.0_DbKi*dy*tmp2 + 3.0_DbKi*tmp1*sz ) &    ! y_hat component
+               + cosPhi/24.0_DbKi*( -3.0_DbKi*R_4*dTheta + 3.0_DbKi*y1*z1*(2.0_DbKi*z1_2-R_2) - 3.0_DbKi*y2*z2*(2.0_DbKi*z2_2-R_2) &
+                                                            + 6.0_DbKi*dy*sz*(z1_2+z2_2) + 8.0_DbKi*tmp1*tmp2  )
       ! IF (EqualRealNos(z1, z2)) THEN ! z_hat component (Nonzero only when z1 /= z2)
       !    Mz = 0.0
       ! ELSE
@@ -5349,8 +5349,8 @@ SUBROUTINE Morison_CalcOutput( Time, u, p, x, xd, z, OtherState, y, m, errStat, 
       !         -cosPhi/24.0*(3.0*tmp1*dz_4 + 8.0*tmp2*dz_3 + 6.0*tmp3*dz_2)
       ! END IF
 
-      Mz =     -Z0/ 6.0*( dz*( y2*y2 + y2*y1 + y1*y1 + tmp2 - 3.0*R_2 )                                                 ) &
-           -cosPhi/24.0*( dz_2*(3.0*z2_2+3.0*z1_2+2.0*y1*y2-6.0*R_2) + dz*dz*(y1*y1-y2*y2) + 4.0*dz*(y1*y1*z1+y2*y2*z2) )
+      Mz =     -Z0/ 6.0_DbKi*( dz*( y2*y2 + y2*y1 + y1*y1 + tmp2 - 3.0_DbKi*R_2 )                                                 ) &
+           -cosPhi/24.0_DbKi*( dz_2*(3.0_DbKi*z2_2+3.0_DbKi*z1_2+2.0_DbKi*y1*y2-6.0_DbKi*R_2) + dz*dz*(y1*y1-y2*y2) + 4.0_DbKi*dz*(y1*y1*z1+y2*y2*z2) )
 
       F(4:6) = p%WaveField%WtrDens * g * (My*y_hat + Mz*z_hat)
 
