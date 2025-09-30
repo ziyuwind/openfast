@@ -259,6 +259,9 @@ development, CMake is adequate. Background on CMake is given in
 :ref:`understanding_cmake`, and procedures for configuring and
 compiling are given in :ref:`cmake_unix` and :ref:`cmake_windows`.
 
+For a guide to compiling on Windows with the linux subsystem, cmake, and VS code, see
+:ref:`OFcompile_WSL_VScode`.
+
 Generally, the steps required to compile are:
 
 1. Install Dependencies (Section :numref:`dependencies`)
@@ -374,6 +377,22 @@ with the build process are documented in the following section:
 
    install_vs_windows.rst
 
+.. _OFcompile_WSL_VScode:
+
+Windows with the linux subsystem and VS code
+--------------------------------------------
+
+This guide provides step-by-step instructions for compiling OpenFAST from source
+on Windows using WSL (Windows Subsystem for Linux), setting up a Python
+environment with pyOpenFAST, and configuring VS Code for development and testing
+with Jupyter notebooks.
+
+.. toctree::
+   :maxdepth: 1
+
+   OFcompile_WSL_VScode.rst
+
+
 .. _understanding_cmake:
 
 Understanding CMake
@@ -478,7 +497,7 @@ The CMake options specific to OpenFAST and their default settings are:
     ORCA_DLL_LOAD                  - Enable OrcaFlex library load (Default: ON)
     USE_DLL_INTERFACE              - Enable runtime loading of dynamic libraries (Default: ON)
     USE_LOCAL_STATIC_LAPACK        - Enable downloading and building static LAPACK and BLAS libs (Default: OFF)
-    VARIABLE_TRACKING              - Enables variable tracking for better runtime debugging output. May increase compile time. Valid only for GNU. (Defualt: ON)
+    VARIABLE_TRACKING              - Enables variable tracking for better runtime debugging output. May increase compile time. Valid only for GNU. (Default: ON)
 
 
 Additional system-specific options may exist for a given system, but those
